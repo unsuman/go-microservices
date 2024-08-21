@@ -1,12 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/unsuman/go-microservices/types"
 )
 
+const wsEndpoint = "ws://127.0.0.1:30000/ws"
 const sendInterval = time.Second
 
 type OBUData struct {
@@ -29,16 +33,27 @@ func generateOBUID() int64 {
 }
 
 func main() {
+	conn, _, err := websocket.DefaultDialer.Dial(wsEndpoint, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for {
 		for i := 0; i < 25; i++ {
 			lat, long := generateLatLong()
-			data := OBUData{
+			data := types.OBUData{
 				OBUid: generateOBUID(),
 				Lat:   lat,
 				Long:  long,
 			}
-			fmt.Println(data)
+			time.Sleep(sendInterval)
+			if err := conn.WriteJSON(data); err != nil {
+				log.Fatal(err)
+			}
 		}
 		time.Sleep(sendInterval)
 	}
+}
+
+func init() {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
