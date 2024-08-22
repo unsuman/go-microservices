@@ -45,7 +45,7 @@ func main() {
 				Lat:   lat,
 				Long:  long,
 			}
-			time.Sleep(sendInterval)
+
 			if err := conn.WriteJSON(data); err != nil {
 				log.Fatal(err)
 			}
