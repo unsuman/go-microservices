@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/websocket"
-	"github.com/segmentio/kafka-go"
 	"github.com/unsuman/go-microservices/types"
 )
 
@@ -31,23 +28,19 @@ func main() {
 }
 
 type DataReceiver struct {
-	conn      *websocket.Conn
-	msgch     chan types.OBUData
-	kafkaConn *kafka.Conn
+	conn  *websocket.Conn
+	msgch chan types.OBUData
+	prod  DataProducer
 }
 
 func NewDataReceiver() *DataReceiver {
-	partition := 0
-	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
-
-	kafkaConn, err := kafka.DialLeader(context.Background(), "tcp", address, kafkaTopic, partition)
+	p, err := NewKafkaProducer(kafkaTopic)
 	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+		log.Fatal(err)
 	}
-
 	return &DataReceiver{
-		msgch:     make(chan types.OBUData, 128),
-		kafkaConn: kafkaConn,
+		msgch: make(chan types.OBUData, 128),
+		prod:  p,
 	}
 }
 
@@ -61,22 +54,6 @@ func (dr DataReceiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 	go dr.readWsReceiveloop()
 }
 
-func (dr DataReceiver) produceData(data *types.OBUData) error {
-	// dr.kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	_, err := dr.kafkaConn.WriteMessages(
-		kafka.Message{Value: []byte(string(data.OBUid))},
-	)
-	if err != nil {
-		log.Fatal("failed to write messages:", err)
-	}
-
-	// if err := dr.kafkaConn.Close(); err != nil {
-	// 	log.Fatal("failed to close writer:", err)
-	// }
-
-	return nil
-}
-
 func (dr DataReceiver) readWsReceiveloop() {
 	fmt.Println("New OBU connected")
 	for {
@@ -86,7 +63,7 @@ func (dr DataReceiver) readWsReceiveloop() {
 			continue
 		}
 		fmt.Printf("--- received data from OBU [%d] :: lat[%.2f] long[%.2f] \n", data.OBUid, data.Lat, data.Long)
-		if err := dr.produceData(&data); err != nil {
+		if err := dr.prod.ProduceData(&data); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println("Data produced to Kafka")
