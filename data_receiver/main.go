@@ -38,6 +38,7 @@ func NewDataReceiver() *DataReceiver {
 	if err != nil {
 		log.Fatal(err)
 	}
+	p = NewLoggingMiddleware(p)
 	return &DataReceiver{
 		msgch: make(chan types.OBUData, 128),
 		prod:  p,
