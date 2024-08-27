@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -19,6 +20,8 @@ type KafkaProducer struct {
 	kafkaConn *kafka.Conn
 }
 
+const kafkaTopic = "obu_data"
+
 func NewKafkaProducer(topic string) (DataProducer, error) {
 	partition := 0
 	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
@@ -33,8 +36,13 @@ func NewKafkaProducer(topic string) (DataProducer, error) {
 }
 
 func (kp KafkaProducer) ProduceData(data *types.OBUData) error {
-	_, err := kp.kafkaConn.WriteMessages(
-		kafka.Message{WriterData: data},
+	jsonData, err := json.Marshal(&data)
+	if err != nil {
+		log.Fatal("failed to marshal data:", err)
+	}
+
+	_, err = kp.kafkaConn.WriteMessages(
+		kafka.Message{Value: jsonData},
 	)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)

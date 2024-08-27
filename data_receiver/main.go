@@ -17,8 +17,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-const kafkaTopic = "obu-data"
-
 func main() {
 	datarec := NewDataReceiver()
 	http.HandleFunc("/ws", datarec.wsHandler)
