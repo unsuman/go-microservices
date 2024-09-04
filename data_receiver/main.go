@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"github.com/unsuman/go-microservices/types"
 )
 
@@ -32,9 +32,9 @@ type DataReceiver struct {
 }
 
 func NewDataReceiver() *DataReceiver {
-	p, err := NewKafkaProducer(kafkaTopic)
+	p, err := NewKafkaProducer(KafkaTopic)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal("failed to create kafka producer:", err)
 	}
 	p = NewLoggingMiddleware(p)
 	return &DataReceiver{
@@ -46,7 +46,7 @@ func NewDataReceiver() *DataReceiver {
 func (dr DataReceiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal("failed to upgrade connection:", err)
 	}
 	dr.conn = conn
 
@@ -58,13 +58,13 @@ func (dr DataReceiver) readWsReceiveloop() {
 	for {
 		var data types.OBUData
 		if err := dr.conn.ReadJSON(&data); err != nil {
-			log.Fatal(err)
+			logrus.Fatal("failed to read json:", err)
 			continue
 		}
 		fmt.Printf("--- received data from OBU [%d] :: lat[%.2f] long[%.2f] \n", data.OBUid, data.Lat, data.Long)
 		if err := dr.prod.ProduceData(&data); err != nil {
-			log.Fatal(err)
+			logrus.Fatal("failed to produce data:", err)
 		}
-		fmt.Println("Data produced to Kafka")
+		logrus.Println("produced data to kafka")
 	}
 }
