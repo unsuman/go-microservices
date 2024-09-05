@@ -3,6 +3,7 @@ package main
 const KafkaTopic = "obu_data"
 
 func main() {
-	consumer := NewKafkaConsumer(KafkaTopic)
+	service := NewCalculatorService()
+	consumer := NewKafkaConsumer(KafkaTopic, service)
 	consumer.ConsumeData()
 }
