@@ -14,8 +14,8 @@ type CalculatorService struct {
 	points [][]float64
 }
 
-func NewCalculatorService() CalculatorService {
-	return CalculatorService{
+func NewCalculatorService() CalculatorServicer {
+	return &CalculatorService{
 		points: make([][]float64, 0),
 	}
 }

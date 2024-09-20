@@ -14,10 +14,10 @@ import (
 type kafkaConsumer struct {
 	reader *kafka.Reader
 	topic  string
-	calc   CalculatorService
+	calc   CalculatorServicer
 }
 
-func NewKafkaConsumer(topic string, s CalculatorService) *kafkaConsumer {
+func NewKafkaConsumer(topic string, s CalculatorServicer) *kafkaConsumer {
 	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{address},
@@ -48,17 +48,9 @@ func (kc *kafkaConsumer) ConsumeData() {
 
 		fmt.Printf("Received OBUData: %+v\n", data)
 
-		distance, err := kc.calc.CalculateDistance(data)
+		_, err = kc.calc.CalculateDistance(data)
 		if err != nil {
 			logrus.Fatal("failed to calculate distance: ", err)
 		}
-
-		fmt.Println("Distance: ", distance)
-
-		logrus.WithFields(logrus.Fields{
-			"obuID": data.OBUid,
-			"lat":   data.Lat,
-			"long":  data.Long,
-		}).Info("received from kafka")
 	}
 }

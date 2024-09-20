@@ -11,7 +11,7 @@ import (
 )
 
 const wsEndpoint = "ws://127.0.0.1:30000/ws"
-const sendInterval = time.Second
+const sendInterval = time.Second * 5
 
 type OBUData struct {
 	OBUid int64   `json:"obuID"`
@@ -38,17 +38,15 @@ func main() {
 		log.Fatal(err)
 	}
 	for {
-		for i := 0; i < 25; i++ {
-			lat, long := generateLatLong()
-			data := types.OBUData{
-				OBUid: generateOBUID(),
-				Lat:   lat,
-				Long:  long,
-			}
+		lat, long := generateLatLong()
+		data := types.OBUData{
+			OBUid: generateOBUID(),
+			Lat:   lat,
+			Long:  long,
+		}
 
-			if err := conn.WriteJSON(data); err != nil {
-				log.Fatal(err)
-			}
+		if err := conn.WriteJSON(data); err != nil {
+			log.Fatal(err)
 		}
 		time.Sleep(sendInterval)
 	}
