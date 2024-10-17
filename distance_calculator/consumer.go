@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func NewKafkaConsumer(topic string, s CalculatorServicer) *kafkaConsumer {
 		logrus.Fatal("failed to dial leader:", err)
 	}
 
-	err = r.SubscribeTopics([]string{topic}, nil)
+	err = r.SubscribeTopics([]string{"obu-data"}, nil)
 	if err != nil {
 		logrus.Fatal("failed to subscribe to topic:", err)
 	}
@@ -39,7 +40,10 @@ func NewKafkaConsumer(topic string, s CalculatorServicer) *kafkaConsumer {
 
 func (kc *kafkaConsumer) ConsumeData() {
 	for {
-		msg, err := kc.reader.ReadMessage(-1)
+		msg, err := kc.reader.ReadMessage(time.Second)
+		if msg == nil {
+			continue
+		}
 		if err != nil {
 			logrus.Fatal("failed to consume message:", err)
 		}

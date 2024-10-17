@@ -17,7 +17,7 @@ type KafkaProducer struct {
 	kafkaConn *kafka.Producer
 }
 
-var KafkaTopic string = "obu_data"
+var KafkaTopic string = "obu-data"
 
 func NewKafkaProducer(topic string) (DataProducer, error) {
 
