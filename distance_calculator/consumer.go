@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/sirupsen/logrus"
@@ -12,20 +10,25 @@ import (
 )
 
 type kafkaConsumer struct {
-	reader *kafka.Reader
+	reader *kafka.Consumer
 	topic  string
 	calc   CalculatorServicer
 }
 
 func NewKafkaConsumer(topic string, s CalculatorServicer) *kafkaConsumer {
-	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
-	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:   []string{address},
-		Topic:     "obu_data", // Replace with your actual topic
-		Partition: 0,          // Ensure you are reading from the correct partition
-		MinBytes:  10e3,       // 10KB
-		MaxBytes:  10e6,       // 10MB
+	r, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers": "localhost",
+		"group.id":          "myGroup",
+		"auto.offset.reset": "earliest",
 	})
+	if err != nil {
+		logrus.Fatal("failed to dial leader:", err)
+	}
+
+	err = r.SubscribeTopics([]string{topic}, nil)
+	if err != nil {
+		logrus.Fatal("failed to subscribe to topic:", err)
+	}
 
 	return &kafkaConsumer{
 		reader: r,
@@ -36,9 +39,9 @@ func NewKafkaConsumer(topic string, s CalculatorServicer) *kafkaConsumer {
 
 func (kc *kafkaConsumer) ConsumeData() {
 	for {
-		msg, err := kc.reader.ReadMessage(context.Background())
+		msg, err := kc.reader.ReadMessage(-1)
 		if err != nil {
-			logrus.Fatal("failed to unmarshal message:", err)
+			logrus.Fatal("failed to consume message:", err)
 		}
 
 		var data types.OBUData

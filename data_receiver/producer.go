@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/sirupsen/logrus"
@@ -22,9 +20,8 @@ type KafkaProducer struct {
 var KafkaTopic string = "obu_data"
 
 func NewKafkaProducer(topic string) (DataProducer, error) {
-	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
 
-	conn, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": address})
+	conn, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 	if err != nil {
 		logrus.Fatal("failed to dial leader:", err)
 	}
