@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/segmentio/kafka-go"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/sirupsen/logrus"
 	"github.com/unsuman/go-microservices/types"
 )
@@ -17,15 +15,15 @@ type DataProducer interface {
 
 type KafkaProducer struct {
 	topic     string
-	kafkaConn *kafka.Conn
+	kafkaConn *kafka.Producer
 }
 
-const KafkaTopic = "obu_data"
+var KafkaTopic string = "obu_data"
 
 func NewKafkaProducer(topic string) (DataProducer, error) {
-	partition := 0
-	address := fmt.Sprintf("%s:9092", os.Getenv("KAFKA_DOCKER_PORT"))
-	conn, err := kafka.DialLeader(context.Background(), "tcp", address, KafkaTopic, partition)
+	address := fmt.Sprintf("%s:9092", "192.168.0.101")
+
+	conn, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": address})
 	if err != nil {
 		logrus.Fatal("failed to dial leader:", err)
 	}
@@ -41,9 +39,10 @@ func (kp KafkaProducer) ProduceData(data *types.OBUData) error {
 		logrus.Fatal("failed to marshal data:", err)
 	}
 
-	_, err = kp.kafkaConn.WriteMessages(
-		kafka.Message{Value: jsonData},
-	)
+	err = kp.kafkaConn.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &KafkaTopic, Partition: kafka.PartitionAny},
+		Value:          jsonData,
+	}, nil)
 	if err != nil {
 		logrus.Fatal("failed to write messages:", err)
 	}

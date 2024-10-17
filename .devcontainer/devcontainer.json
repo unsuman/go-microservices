@@ -1,0 +1,6 @@
+{
+  "name": "Go Microservices Dev Container",
+  "image": "golang:1.22.3",
+  "forwardPorts": [8080, 9090, 8081],
+  "postCreateCommand": "go mod tidy"
+}
