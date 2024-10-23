@@ -20,7 +20,6 @@ type KafkaProducer struct {
 var KafkaTopic string = "obu-data"
 
 func NewKafkaProducer(topic string) (DataProducer, error) {
-
 	conn, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 	if err != nil {
 		logrus.Fatal("failed to dial leader:", err)
