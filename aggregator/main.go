@@ -15,6 +15,7 @@ func main() {
 
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
+	svc = NewLoggingMiddleware(svc)
 
 	makeHTTPTransport(svc, *listenAddr)
 }
@@ -30,6 +31,11 @@ func handleAggregate(svc Aggregator) http.HandlerFunc {
 		var distance types.Distance
 		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if err := svc.AggregateDistance(distance); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}

@@ -1,6 +1,8 @@
 package main
 
-import "github.com/unsuman/go-microservices/types"
+import (
+	"github.com/unsuman/go-microservices/types"
+)
 
 type Storer interface {
 	InsertDistance(types.Distance) error
