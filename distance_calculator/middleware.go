@@ -25,6 +25,7 @@ func (l *LoggingMiddleware) CalculateDistance(data types.OBUData) (distance floa
 			"obuID":    data.OBUid,
 			"error":    err,
 			"distance": distance,
+			"took":     time.Since(t),
 		}).Info("calculating distance")
 	}(t)
 	return

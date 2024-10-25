@@ -9,12 +9,12 @@ type Storer interface {
 }
 
 type MemeoryStore struct {
-	data map[int]float64
+	data map[int64]float64
 }
 
 func NewMemoryStore() *MemeoryStore {
 	return &MemeoryStore{
-		data: make(map[int]float64),
+		data: make(map[int64]float64),
 	}
 }
 

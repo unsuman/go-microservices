@@ -2,7 +2,9 @@ package main
 
 import (
 	"math"
+	"time"
 
+	"github.com/unsuman/go-microservices/aggregator/client"
 	"github.com/unsuman/go-microservices/types"
 )
 
@@ -12,11 +14,13 @@ type CalculatorServicer interface {
 
 type CalculatorService struct {
 	points [][]float64
+	client *client.Client
 }
 
-func NewCalculatorService() CalculatorServicer {
+func NewCalculatorService(endPoint string) CalculatorServicer {
 	return &CalculatorService{
 		points: make([][]float64, 0),
+		client: client.NewClient(endPoint),
 	}
 }
 
@@ -28,6 +32,13 @@ func (c *CalculatorService) CalculateDistance(data types.OBUData) (float64, erro
 		distance = calculateDistance(previousPoint[0], data.Lat, previousPoint[1], data.Long)
 	}
 	c.points = append(c.points, []float64{data.Lat, data.Long})
+
+	aggDistance := types.Distance{
+		OBUID: data.OBUid,
+		Value: distance,
+		Unix:  time.Now().Unix(),
+	}
+	c.client.AggregateDistance(aggDistance)
 	return distance, nil
 }
 

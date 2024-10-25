@@ -2,7 +2,7 @@ package types
 
 type Distance struct {
 	Value float64 `json:"value"`
-	OBUID int     `json:"obuID"`
+	OBUID int64   `json:"obuID"`
 	Unix  int64   `json:"unix"`
 }
 
