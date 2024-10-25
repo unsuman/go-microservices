@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/unsuman/go-microservices/types"
 )
@@ -23,7 +24,30 @@ func main() {
 func makeHTTPTransport(svc Aggregator, listenAddr string) {
 	fmt.Println("HTTP transport listening on", listenAddr)
 	http.HandleFunc("/aggregate", handleAggregate(svc))
+	http.HandleFunc("/invoice", handleInvoice(svc))
 	http.ListenAndServe(listenAddr, nil)
+}
+
+func handleInvoice(svc Aggregator) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		obuid := r.URL.Query().Get("obuid")
+		if obuid == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		obuidInt, err := strconv.ParseInt(obuid, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		distance, err := svc.CalculateInvoice(obuidInt)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(distance)
+	}
 }
 
 func handleAggregate(svc Aggregator) http.HandlerFunc {

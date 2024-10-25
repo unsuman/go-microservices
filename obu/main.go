@@ -13,12 +13,6 @@ import (
 const wsEndpoint = "ws://127.0.0.1:30000/ws"
 const sendInterval = time.Second * 5
 
-type OBUData struct {
-	OBUid int64   `json:"obuID"`
-	Lat   float64 `json:"lat"`
-	Long  float64 `json:"long"`
-}
-
 func generateLatLong() (float64, float64) {
 	return generateCoord(), generateCoord()
 }
@@ -28,8 +22,12 @@ func generateCoord() float64 {
 	return coord + rand.Float64()
 }
 
-func generateOBUID() int64 {
-	return int64(rand.Intn(math.MaxInt))
+func generateOBUID(n int) []int64 {
+	ids := make([]int64, n)
+	for i := 0; i < n; i++ {
+		ids[i] = int64(rand.Intn(math.MaxInt))
+	}
+	return ids
 }
 
 func main() {
@@ -37,18 +35,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for {
-		lat, long := generateLatLong()
-		data := types.OBUData{
-			OBUid: generateOBUID(),
-			Lat:   lat,
-			Long:  long,
-		}
 
-		if err := conn.WriteJSON(data); err != nil {
-			log.Fatal(err)
+	ids := generateOBUID(5)
+	for {
+		for _, id := range ids {
+			lat, long := generateLatLong()
+			data := types.OBUData{
+				OBUid: id,
+				Lat:   lat,
+				Long:  long,
+			}
+
+			if err := conn.WriteJSON(data); err != nil {
+				log.Fatal(err)
+			}
+			time.Sleep(sendInterval)
 		}
-		time.Sleep(sendInterval)
 	}
 }
 
