@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+option go_package = "github.com/unsuman/go-microservices/types";
+
+message UserRequest {
+    string id = 1;
+}
