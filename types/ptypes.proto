@@ -2,6 +2,14 @@ syntax = "proto3";
 
 option go_package = "github.com/unsuman/go-microservices/types";
 
-message UserRequest {
-    string id = 1;
+service Aggregator {
+    rpc Aggregate(AggregateRequest) returns (None);
+}
+
+message None {}
+
+message AggregateRequest {
+    int64 ObuID = 1;
+    double Value = 2;
+    int64 Unix = 3;
 }

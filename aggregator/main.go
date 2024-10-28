@@ -4,21 +4,25 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/unsuman/go-microservices/types"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	listenAddr := flag.String("listenaddr", ":3300", "HTTP server listen address")
+	httpListenAddr := flag.String("listenaddr", ":3300", "HTTP server listen address")
+	grpcListenAddr := flag.String("grpcaddr", ":3301", "GRPC server listen address")
 	flag.Parse()
 
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
 	svc = NewLoggingMiddleware(svc)
 
-	makeHTTPTransport(svc, *listenAddr)
+	go makeHTTPTransport(svc, *httpListenAddr)
+	makeGRPCServer(svc, *grpcListenAddr)
 }
 
 func makeHTTPTransport(svc Aggregator, listenAddr string) {
@@ -26,6 +30,21 @@ func makeHTTPTransport(svc Aggregator, listenAddr string) {
 	http.HandleFunc("/aggregate", handleAggregate(svc))
 	http.HandleFunc("/invoice", handleInvoice(svc))
 	http.ListenAndServe(listenAddr, nil)
+}
+
+func makeGRPCServer(svc Aggregator, listenAddr string) {
+	ln, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		fmt.Println("failed to listen:", err)
+		return
+	}
+
+	server := grpc.NewServer()
+	fmt.Println("GRPC transport listening on", listenAddr)
+
+	types.RegisterAggregatorServer(server, NewGRPCAggregator(svc))
+
+	server.Serve(ln)
 }
 
 func handleInvoice(svc Aggregator) http.HandlerFunc {
