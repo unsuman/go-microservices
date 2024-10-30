@@ -14,13 +14,13 @@ type CalculatorServicer interface {
 
 type CalculatorService struct {
 	points [][]float64
-	client *client.Client
+	client *client.HTTPClient
 }
 
 func NewCalculatorService(endPoint string) CalculatorServicer {
 	return &CalculatorService{
 		points: make([][]float64, 0),
-		client: client.NewClient(endPoint),
+		client: client.NewHTTPClient(endPoint),
 	}
 }
 

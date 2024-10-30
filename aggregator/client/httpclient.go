@@ -9,17 +9,17 @@ import (
 	"github.com/unsuman/go-microservices/types"
 )
 
-type Client struct {
+type HTTPClient struct {
 	Endpoint string
 }
 
-func NewClient(endpoint string) *Client {
-	return &Client{
+func NewHTTPClient(endpoint string) *HTTPClient {
+	return &HTTPClient{
 		Endpoint: endpoint,
 	}
 }
 
-func (c *Client) AggregateDistance(d types.Distance) error {
+func (c *HTTPClient) AggregateDistance(d types.Distance) error {
 	b, err := json.Marshal(d)
 	if err != nil {
 		return err

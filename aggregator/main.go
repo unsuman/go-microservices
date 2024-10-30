@@ -1,28 +1,45 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/unsuman/go-microservices/aggregator/client"
 	"github.com/unsuman/go-microservices/types"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	httpListenAddr := flag.String("listenaddr", ":3300", "HTTP server listen address")
-	grpcListenAddr := flag.String("grpcaddr", ":3301", "GRPC server listen address")
+	// httpListenAddr := flag.String("listenaddr", ":3300", "HTTP server listen address")
+	grpcListenAddr := flag.String("grpcaddr", "localhost:50051", "GRPC server listen address")
 	flag.Parse()
 
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
 	svc = NewLoggingMiddleware(svc)
 
-	go makeHTTPTransport(svc, *httpListenAddr)
-	makeGRPCServer(svc, *grpcListenAddr)
+	go makeGRPCServer(svc, *grpcListenAddr)
+	time.Sleep(time.Second * 5)
+	// makeHTTPTransport(svc, *httpListenAddr)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	c := client.NewGRPCClient(*grpcListenAddr)
+	if _, err := c.AggregatorClient.Aggregate(ctx, &types.AggregateRequest{
+		ObuID: 1,
+		Value: 10.0,
+		Unix:  time.Now().Unix(),
+	}); err != nil {
+		fmt.Println("failed to call grpc client")
+		return
+	}
 }
 
 func makeHTTPTransport(svc Aggregator, listenAddr string) {
@@ -33,18 +50,23 @@ func makeHTTPTransport(svc Aggregator, listenAddr string) {
 }
 
 func makeGRPCServer(svc Aggregator, listenAddr string) {
-	ln, err := net.Listen("tcp", listenAddr)
+	ln, err := net.Listen("tcp", "localhost:50051")
 	if err != nil {
 		fmt.Println("failed to listen:", err)
 		return
 	}
 
-	server := grpc.NewServer()
+	var opts []grpc.ServerOption
+	server := grpc.NewServer(opts...)
 	fmt.Println("GRPC transport listening on", listenAddr)
 
 	types.RegisterAggregatorServer(server, NewGRPCAggregator(svc))
 
-	server.Serve(ln)
+	if err = server.Serve(ln); err != nil {
+		fmt.Println("failed to serve:", err)
+		return
+	}
+
 }
 
 func handleInvoice(svc Aggregator) http.HandlerFunc {
