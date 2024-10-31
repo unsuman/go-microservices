@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"log"
 
 	"github.com/unsuman/go-microservices/types"
@@ -23,4 +24,12 @@ func NewGRPCClient(endpoint string) *GrpcClient {
 		Endpoint:         endpoint,
 		AggregatorClient: c,
 	}
+}
+
+func (c *GrpcClient) Aggregate(ctx context.Context, aggReq *types.AggregateRequest) error {
+	_, err := c.AggregatorClient.Aggregate(ctx, aggReq)
+	if err != nil {
+		return err
+	}
+	return nil
 }

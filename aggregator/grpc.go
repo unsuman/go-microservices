@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/unsuman/go-microservices/types"
 )
@@ -25,7 +24,5 @@ func (g *GRPCAggregator) Aggregate(ctx context.Context, req *types.AggregateRequ
 		Unix:  req.Unix,
 	}
 
-	fmt.Println("Aggregating distance: ", distance)
-	g.svc.AggregateDistance(distance)
 	return &types.None{}, g.svc.AggregateDistance(distance)
 }

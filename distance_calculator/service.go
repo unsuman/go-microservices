@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -14,13 +15,16 @@ type CalculatorServicer interface {
 
 type CalculatorService struct {
 	points [][]float64
-	client *client.HTTPClient
+	client client.Client
 }
 
 func NewCalculatorService(endPoint string) CalculatorServicer {
+	// httpClient := client.NewHTTPClient(endPoint)
+
+	grpcClient := client.NewGRPCClient(endPoint)
 	return &CalculatorService{
 		points: make([][]float64, 0),
-		client: client.NewHTTPClient(endPoint),
+		client: grpcClient,
 	}
 }
 
@@ -33,12 +37,16 @@ func (c *CalculatorService) CalculateDistance(data types.OBUData) (float64, erro
 	}
 	c.points = append(c.points, []float64{data.Lat, data.Long})
 
-	aggDistance := types.Distance{
-		OBUID: data.OBUid,
+	aggDistance := types.AggregateRequest{
+		ObuID: data.OBUid,
 		Value: distance,
 		Unix:  time.Now().Unix(),
 	}
-	c.client.AggregateDistance(aggDistance)
+
+	if err := c.client.Aggregate(context.Background(), &aggDistance); err != nil {
+		return 0, err
+	}
+
 	return distance, nil
 }
 
