@@ -24,7 +24,7 @@ func main() {
 	svc := NewInvoiceAggregator(store)
 	svc = NewLoggingMiddleware(svc)
 
-	go makeGRPCServer(svc, *grpcListenAddr)
+	makeGRPCServer(svc, *grpcListenAddr)
 	time.Sleep(time.Second * 5)
 	// makeHTTPTransport(svc, *httpListenAddr)
 
