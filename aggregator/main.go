@@ -25,7 +25,6 @@ func main() {
 	svc = NewLoggingMiddleware(svc)
 
 	makeGRPCServer(svc, *grpcListenAddr)
-	time.Sleep(time.Second * 5)
 	// makeHTTPTransport(svc, *httpListenAddr)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
