@@ -4,9 +4,20 @@ option go_package = "github.com/unsuman/go-microservices/types";
 
 service Aggregator {
     rpc Aggregate(AggregateRequest) returns (None);
+    rpc GetInvoice(InvoiceRequest) returns (InvoiceResponse);
 }
 
 message None {}
+
+message InvoiceRequest {
+    int64 ObuID = 1;
+}
+
+message InvoiceResponse {
+    int64 ObuID = 1;
+    double TotalAmount = 2;
+    double TotalDistance = 3;
+}
 
 message AggregateRequest {
     int64 ObuID = 1;

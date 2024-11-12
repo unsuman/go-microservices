@@ -35,9 +35,14 @@ func (c *GrpcClient) Aggregate(ctx context.Context, aggReq *types.AggregateReque
 }
 
 func (c *GrpcClient) GetInvoice(ctx context.Context, obuID int64) (*types.Invoice, error) {
+	inv, err := c.AggregatorClient.GetInvoice(ctx, &types.InvoiceRequest{ObuID: obuID})
+	if err != nil || inv == nil {
+		return nil, err
+	}
+
 	return &types.Invoice{
 		OBUid:         obuID,
-		TotalAmount:   1003.21,
-		TotalDistance: 21.121,
+		TotalAmount:   inv.TotalAmount,
+		TotalDistance: inv.TotalDistance,
 	}, nil
 }

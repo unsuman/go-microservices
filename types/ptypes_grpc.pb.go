@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Aggregator_Aggregate_FullMethodName = "/Aggregator/Aggregate"
+	Aggregator_Aggregate_FullMethodName  = "/Aggregator/Aggregate"
+	Aggregator_GetInvoice_FullMethodName = "/Aggregator/GetInvoice"
 )
 
 // AggregatorClient is the client API for Aggregator service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AggregatorClient interface {
 	Aggregate(ctx context.Context, in *AggregateRequest, opts ...grpc.CallOption) (*None, error)
+	GetInvoice(ctx context.Context, in *InvoiceRequest, opts ...grpc.CallOption) (*InvoiceResponse, error)
 }
 
 type aggregatorClient struct {
@@ -47,11 +49,22 @@ func (c *aggregatorClient) Aggregate(ctx context.Context, in *AggregateRequest, 
 	return out, nil
 }
 
+func (c *aggregatorClient) GetInvoice(ctx context.Context, in *InvoiceRequest, opts ...grpc.CallOption) (*InvoiceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InvoiceResponse)
+	err := c.cc.Invoke(ctx, Aggregator_GetInvoice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AggregatorServer is the server API for Aggregator service.
 // All implementations must embed UnimplementedAggregatorServer
 // for forward compatibility.
 type AggregatorServer interface {
 	Aggregate(context.Context, *AggregateRequest) (*None, error)
+	GetInvoice(context.Context, *InvoiceRequest) (*InvoiceResponse, error)
 	mustEmbedUnimplementedAggregatorServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedAggregatorServer struct{}
 
 func (UnimplementedAggregatorServer) Aggregate(context.Context, *AggregateRequest) (*None, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Aggregate not implemented")
+}
+func (UnimplementedAggregatorServer) GetInvoice(context.Context, *InvoiceRequest) (*InvoiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInvoice not implemented")
 }
 func (UnimplementedAggregatorServer) mustEmbedUnimplementedAggregatorServer() {}
 func (UnimplementedAggregatorServer) testEmbeddedByValue()                    {}
@@ -104,6 +120,24 @@ func _Aggregator_Aggregate_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Aggregator_GetInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InvoiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AggregatorServer).GetInvoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Aggregator_GetInvoice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AggregatorServer).GetInvoice(ctx, req.(*InvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Aggregator_ServiceDesc is the grpc.ServiceDesc for Aggregator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var Aggregator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Aggregate",
 			Handler:    _Aggregator_Aggregate_Handler,
+		},
+		{
+			MethodName: "GetInvoice",
+			Handler:    _Aggregator_GetInvoice_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

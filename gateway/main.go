@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/unsuman/go-microservices/aggregator/client"
 )
@@ -33,7 +34,16 @@ func main() {
 }
 
 func (i *InvoiceHandler) handleInvoice(w http.ResponseWriter, r *http.Request) error {
-	inv, err := i.c.GetInvoice(context.Background(), 1)
+	if r.Method != http.MethodGet {
+		return fmt.Errorf("invalid method")
+	}
+	obuIDStr := r.URL.Query().Get("obuid")
+	obuID, err := strconv.ParseInt(obuIDStr, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid obuid: %v", err)
+	}
+
+	inv, err := i.c.GetInvoice(context.Background(), obuID)
 	if err != nil {
 		return err
 	}
