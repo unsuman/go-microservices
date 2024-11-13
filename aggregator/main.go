@@ -1,16 +1,14 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 
-	"github.com/unsuman/go-microservices/aggregator/client"
+	"github.com/sirupsen/logrus"
 	"github.com/unsuman/go-microservices/types"
 	"google.golang.org/grpc"
 )
@@ -26,23 +24,10 @@ func main() {
 
 	makeGRPCServer(svc, *grpcListenAddr)
 	// makeHTTPTransport(svc, *httpListenAddr)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	c := client.NewGRPCClient(*grpcListenAddr)
-	if _, err := c.AggregatorClient.Aggregate(ctx, &types.AggregateRequest{
-		ObuID: 1,
-		Value: 10.0,
-		Unix:  time.Now().Unix(),
-	}); err != nil {
-		fmt.Println("failed to call grpc client")
-		return
-	}
 }
 
 func makeHTTPTransport(svc Aggregator, listenAddr string) {
-	fmt.Println("HTTP transport listening on", listenAddr)
+	logrus.Printf("HTTP transport listening on %s", listenAddr)
 	http.HandleFunc("/aggregate", handleAggregate(svc))
 	http.HandleFunc("/invoice", handleInvoice(svc))
 	http.ListenAndServe(listenAddr, nil)
@@ -57,7 +42,7 @@ func makeGRPCServer(svc Aggregator, listenAddr string) {
 
 	var opts []grpc.ServerOption
 	server := grpc.NewServer(opts...)
-	fmt.Println("GRPC transport listening on", listenAddr)
+	logrus.Printf("GRPC transport listening on %s", listenAddr)
 
 	types.RegisterAggregatorServer(server, NewGRPCAggregator(svc))
 

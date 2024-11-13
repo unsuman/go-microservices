@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -20,7 +19,7 @@ var upgrader = websocket.Upgrader{
 func main() {
 	datarec := NewDataReceiver()
 	http.HandleFunc("/ws", datarec.wsHandler)
-	http.ListenAndServe(":30000", nil)
+	logrus.Fatal(http.ListenAndServe(":30000", nil))
 
 	defer datarec.conn.Close()
 }
@@ -54,14 +53,14 @@ func (dr DataReceiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dr DataReceiver) readWsReceiveloop() {
-	fmt.Println("New OBU connected")
+	logrus.Println("reading data from OBU")
 	for {
 		var data types.OBUData
 		if err := dr.conn.ReadJSON(&data); err != nil {
 			logrus.Fatal("failed to read json:", err)
 			continue
 		}
-		fmt.Printf("--- received data from OBU [%d] :: lat[%.2f] long[%.2f] \n", data.OBUid, data.Lat, data.Long)
+		logrus.Infof("received data from OBU [%d] :: lat[%.2f] long[%.2f] \n", data.OBUid, data.Lat, data.Long)
 		if err := dr.prod.ProduceData(&data); err != nil {
 			logrus.Fatal("failed to produce data:", err)
 		}

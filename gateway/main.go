@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sirupsen/logrus"
 	"github.com/unsuman/go-microservices/aggregator/client"
 	"github.com/unsuman/go-microservices/types"
 )
@@ -30,7 +31,7 @@ func main() {
 	c := client.NewGRPCClient("localhost:50051")
 	invoiceHandler := NewInvoiceHandler(c)
 	http.HandleFunc("/invoice", makeHandlerFunc(invoiceHandler.handleInvoice))
-	fmt.Println("HTTP gateway listening on", *listenAddr)
+	logrus.Printf("HTTP gateway listening on %s", *listenAddr)
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }
 
