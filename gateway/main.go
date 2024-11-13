@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/unsuman/go-microservices/aggregator/client"
+	"github.com/unsuman/go-microservices/types"
 )
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
@@ -43,7 +44,7 @@ func (i *InvoiceHandler) handleInvoice(w http.ResponseWriter, r *http.Request) e
 		return fmt.Errorf("invalid obuid: %v", err)
 	}
 
-	inv, err := i.c.GetInvoice(context.Background(), obuID)
+	inv, err := i.c.GetInvoice(context.Background(), &types.InvoiceRequest{ObuID: obuID})
 	if err != nil {
 		return err
 	}

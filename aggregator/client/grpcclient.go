@@ -34,14 +34,14 @@ func (c *GrpcClient) Aggregate(ctx context.Context, aggReq *types.AggregateReque
 	return nil
 }
 
-func (c *GrpcClient) GetInvoice(ctx context.Context, obuID int64) (*types.Invoice, error) {
-	inv, err := c.AggregatorClient.GetInvoice(ctx, &types.InvoiceRequest{ObuID: obuID})
+func (c *GrpcClient) GetInvoice(ctx context.Context, aggReq *types.InvoiceRequest) (*types.Invoice, error) {
+	inv, err := c.AggregatorClient.GetInvoice(ctx, aggReq)
 	if err != nil || inv == nil {
 		return nil, err
 	}
 
 	return &types.Invoice{
-		OBUid:         obuID,
+		OBUid:         inv.ObuID,
 		TotalAmount:   inv.TotalAmount,
 		TotalDistance: inv.TotalDistance,
 	}, nil
