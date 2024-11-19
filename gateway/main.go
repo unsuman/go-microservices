@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/unsuman/go-microservices/aggregator/client"
 	"github.com/unsuman/go-microservices/types"
@@ -25,12 +26,13 @@ func NewInvoiceHandler(c client.Client) *InvoiceHandler {
 }
 
 func main() {
-	listenAddr := flag.String("listenaddr", ":6000", "HTTP gateway listen address")
+	listenAddr := flag.String("listenaddr", ":9000", "HTTP gateway listen address")
 	flag.Parse()
 
 	c := client.NewGRPCClient("localhost:50051")
 	invoiceHandler := NewInvoiceHandler(c)
 	http.HandleFunc("/invoice", makeHandlerFunc(invoiceHandler.handleInvoice))
+	http.Handle("/metrics", promhttp.Handler())
 	logrus.Printf("HTTP gateway listening on %s", *listenAddr)
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }
